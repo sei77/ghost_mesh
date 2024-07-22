@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from bpy.props import IntProperty, StringProperty, FloatVectorProperty, FloatProperty, BoolProperty
+from bpy.props import IntProperty, FloatVectorProperty, BoolProperty
 from . import gm_draw
 
 # すべての頂点、辺、面を表示
@@ -68,22 +68,15 @@ def ghost_mesh(event, act_obj, mat_index):
 class GM_OT_GhostMesh(bpy.types.Operator):
     
     bl_idname = "object.ghost_mesh"
-    bl_label = "メッシュ表示オペレータ"
-    bl_description = "指定マテリアル以外のメッシュを隠す"
+    bl_label = bpy.app.translations.pgettext("Mesh display/hide")
+    bl_description = bpy.app.translations.pgettext("Hide all meshes except those to which materials are assigned")
     bl_options = {'REGISTER', 'UNDO'}
     
-    mat_name  : StringProperty()
     mat_index : IntProperty()
-    
-    def execute(self, context):
-        if context.area.type == 'VIEW_3D':
-            ghost_mesh(self, event, bpy.context.object, self.mat_index)
-            context.area.tag_redraw()
-        return {'FINISHED'}
     
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
-            if self.mat_name == '':
+            if self.mat_index == -2:
                 show_all(bpy.context.object)
             else:
                 ghost_mesh(event, bpy.context.object, self.mat_index)
@@ -98,8 +91,8 @@ class GM_OT_GhostMesh(bpy.types.Operator):
 class GM_OT_GhostMeshDisplay(bpy.types.Operator):
     
     bl_idname = "object.ghost_mesh_display"
-    bl_label = "表示・非表示切り替え"
-    bl_description = "指定マテリアルの表示・非表示切り替え"
+    bl_label = bpy.app.translations.pgettext("Display switching")
+    bl_description = bpy.app.translations.pgettext("Show/hide material")
     bl_options = {'REGISTER', 'UNDO'}
     
     mat_index : IntProperty()
@@ -120,10 +113,10 @@ class GM_OT_GhostMeshDisplay(bpy.types.Operator):
 # パネル登録
 class GM_PT_SelectMaterial(bpy.types.Panel):
 
-    bl_label = "表示マテリアルの選択"
+    bl_label = bpy.app.translations.pgettext("Display Material Selection")
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "ゴースト"
+    bl_category = bpy.app.translations.pgettext("Ghost")
     bl_context = "mesh_edit"
     
     def draw(self, context):
@@ -135,8 +128,7 @@ class GM_PT_SelectMaterial(bpy.types.Panel):
             return
         
         op1 = layout.operator(GM_OT_GhostMesh.bl_idname,text='Show All', icon='SHADING_RENDERED')
-        op1.mat_name  = ''
-        op1.mat_index = 0
+        op1.mat_index = -2
         
         if not obj.material_slots:
             return
@@ -148,22 +140,20 @@ class GM_PT_SelectMaterial(bpy.types.Panel):
                     mat.ghost = False
                 sp = layout.split(align=True,factor=0.8)
                 op1 = sp.operator(GM_OT_GhostMesh.bl_idname, text=mat.name, icon='MATERIAL')
-                op1.mat_name  = mat.name
                 op1.mat_index = i
                 op2 = sp.operator(GM_OT_GhostMeshDisplay.bl_idname, text='', icon='GHOST_ENABLED' if mat.ghost else 'X')
                 op2.mat_index = i
             else:
                 op1 = layout.operator(GM_OT_GhostMesh.bl_idname, text='No Material Assigned', icon='MATERIAL')
-                op1.mat_name = 'No Material Assigned'
                 op1.mat_index = -1
 
 
 class GM_PT_SelectMaterialOption(bpy.types.Panel):
 
-    bl_label = "オプション設定"
+    bl_label = bpy.app.translations.pgettext("Option Setting")
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "ゴースト"
+    bl_category = bpy.app.translations.pgettext("Ghost")
     bl_context = "mesh_edit"
     
     def draw(self, context):
@@ -171,28 +161,28 @@ class GM_PT_SelectMaterialOption(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         
-        layout.prop(scene, "ghost_display"   , text="ゴーストを表示")
-        layout.prop(scene, "ghost_edge_color", text="辺の色")
-        layout.prop(scene, "ghost_face_color", text="面の色")
+        layout.prop(scene, "ghost_display"   , text=bpy.app.translations.pgettext("Ghosting Display"))
+        layout.prop(scene, "ghost_edge_color", text=bpy.app.translations.pgettext("Edge color"))
+        layout.prop(scene, "ghost_face_color", text=bpy.app.translations.pgettext("Face color"))
         
         gm_draw.CustomDrawOperator.init_draw()
 
 
 def init_props():
     bpy.types.Scene.ghost_display = BoolProperty(
-        name="ゴーストを表示",
-        description="隠れた辺や面を半透明で表示する",
+        name=bpy.app.translations.pgettext("Ghosting Display"),
+        description=bpy.app.translations.pgettext("Display hidden edges and faces as translucent"),
         default=True)
     bpy.types.Scene.ghost_edge_color = FloatVectorProperty(
-        name="辺の色",
-        description="隠れた辺の色",
+        name=bpy.app.translations.pgettext("Edge color"),
+        description=bpy.app.translations.pgettext("Hidden edge color"),
         subtype='COLOR', default=[0.0, 1.0, 0.0, 0.1], size=4, min=0.0, max=1.0)
     bpy.types.Scene.ghost_face_color = FloatVectorProperty(
-        name="面の色",
-        description="隠れた面の色",
+        name=bpy.app.translations.pgettext("Face color"),
+        description=bpy.app.translations.pgettext("Hidden surface color"),
         subtype='COLOR', default=[0.0, 0.8, 0.0, 0.1], size=4, min=0.0, max=1.0)
     bpy.types.Material.ghost = bpy.props.BoolProperty(
-        name="ゴースト表示", default=True)
+        name=bpy.app.translations.pgettext("Ghosting Display"), default=True)
 
 
 def clear_props():
