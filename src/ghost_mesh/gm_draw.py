@@ -56,8 +56,9 @@ class CustomDrawOperator(bpy.types.Operator):
                 model_matrix = obj.matrix_world
                 
                 for face in faces:
-                    if not obj.material_slots[face.material_index].material.ghost:
-                        continue
+                    if len(obj.material_slots) > 0 and hasattr(obj.material_slots[face.material_index].material, 'ghost'):
+                        if obj.material_slots[face.material_index].material.ghost == False:
+                            continue
                     start_index = len(face_vert)
                     for loop in face.loops:
                         face_vert.append(model_matrix @ loop.vert.co)
