@@ -45,69 +45,43 @@ class CustomDrawOperator(bpy.types.Operator):
             else:
                 bm = bmesh.from_edit_mesh(obj.data)
             
-            ghost_verts = []
-            
-            # 隠れた面を描画する
+            # 隠れた面/辺を描画する
             faces = [face for face in bm.faces if face.hide]
             
             if faces:
-                shader = gpu.shader.from_builtin('UNIFORM_COLOR')
-                vertices = []
-                indices  = []
+                edge_vert = []
+                face_vert = []
+                indices   = []
                 
                 model_matrix = obj.matrix_world
                 
                 for face in faces:
                     if not obj.material_slots[face.material_index].material.ghost:
-                        ghost_verts.extend(face.verts)
                         continue
-                    start_index = len(vertices)
+                    start_index = len(face_vert)
                     for loop in face.loops:
-                        vertices.append(model_matrix @ loop.vert.co)
+                        face_vert.append(model_matrix @ loop.vert.co)
                     for i in range(1, len(face.verts) - 1):
                         indices.append((start_index, start_index + i, start_index + i + 1))
-                
-                batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)
+                    for edge in face.edges:
+                        edge_vert.append(model_matrix @ edge.verts[0].co)
+                        edge_vert.append(model_matrix @ edge.verts[1].co)
                 
                 gpu.state.depth_test_set('LESS')
                 gpu.state.blend_set('ALPHA')
                 gpu.state.face_culling_set('BACK')
                 
+                shader = gpu.shader.from_builtin('UNIFORM_COLOR')
                 shader.bind()
+                
+                batch = batch_for_shader(shader, 'TRIS', {"pos": face_vert}, indices=indices)
                 shader.uniform_float("color", bpy.context.scene.ghost_face_color)
                 batch.draw(shader)
-                
-                gpu.state.blend_set('NONE')
-                gpu.state.depth_test_set('NONE')
                 gpu.state.face_culling_set('NONE')
-            
-            # 隠れた辺を描画する
-            edges = [edge for edge in bm.edges if edge.hide]
-            
-            if edges:
-                shader = gpu.shader.from_builtin('UNIFORM_COLOR')
-                vertices = []
-                indices  = []
                 
-                model_matrix = obj.matrix_world
-                
-                for edge in edges:
-                    v1, v2 = edge.verts
-                    if v1 in ghost_verts and v2 in ghost_verts:
-                        continue
-                    vertices.extend([v1.co, v2.co])
-                    vertices.extend([model_matrix @ v1.co, model_matrix @ v2.co])
-                    indices.append((len(vertices) - 2, len(vertices) - 1))
-                
-                batch = batch_for_shader(shader, 'LINES', {"pos": vertices}, indices=indices)
-                
-                gpu.state.depth_test_set('LESS')
-                gpu.state.blend_set('ALPHA')
                 gpu.state.line_width_set(2.0)
-                
-                shader.bind()
-                if bpy.context.scene.ghost_edge_color:
-                    shader.uniform_float("color", bpy.context.scene.ghost_edge_color)
+                batch = batch_for_shader(shader, 'LINES', {"pos": edge_vert})
+                shader.uniform_float("color", bpy.context.scene.ghost_edge_color)
                 batch.draw(shader)
                 
                 gpu.state.blend_set('NONE')
