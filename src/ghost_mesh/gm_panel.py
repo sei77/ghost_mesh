@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from bpy.props import IntProperty, FloatVectorProperty, BoolProperty
+from bpy.props import IntProperty, FloatProperty, FloatVectorProperty, BoolProperty
 from . import gm_draw
 
 # すべての頂点、辺、面を表示
@@ -35,23 +35,37 @@ def ghost_mesh(event, act_obj, mat_index):
     bpy.ops.object.mode_set(mode="OBJECT")
     
     mesh = act_obj.data
-    mesh.update()
     
-    # CTRLキーを押していた場合は状態を維持する
-    if not event.ctrl:
-        for vert in mesh.vertices:
-            vert.hide = True
-        for face in mesh.polygons:
-            face.hide = True
+    # 頂点はすべて非表示、辺はすべて表示
+    for vert in mesh.vertices:
+        vert.hide = True
     for edge in mesh.edges:
         edge.hide = False
     
-    # 選択マテリアルを持つ面と構成する頂点を表示する
-    for face in mesh.polygons:
-        if face.material_index == mat_index:
-            for v in face.vertices:
-                mesh.vertices[v].hide = False
-            face.hide = False
+    # SHIFTキーを押していた場合は現状を維持して対象を表示する
+    if event.shift:
+        for face in mesh.polygons:
+            if face.material_index == mat_index or face.hide == False:
+                face.hide = False
+                for v in face.vertices:
+                    mesh.vertices[v].hide = False
+    # CTRLキーを押していた場合は現状を維持して対象を非表示にする
+    elif event.ctrl:
+        for face in mesh.polygons:
+            if face.material_index == mat_index:
+                face.hide = True
+            elif face.hide == False:
+                for v in face.vertices:
+                    mesh.vertices[v].hide = False
+    # 上記以外の場合は、対象のみ表示する
+    else:
+        for face in mesh.polygons:
+            if face.material_index == mat_index:
+                face.hide = False
+                for v in face.vertices:
+                    mesh.vertices[v].hide = False
+            else:
+                face.hide = True
     
     # いずれかの頂点が非表示だった場合は辺を隠す
     for edge in mesh.edges:
@@ -60,6 +74,8 @@ def ghost_mesh(event, act_obj, mat_index):
         
         if v1.hide or v2.hide:
             edge.hide = True
+    
+    mesh.update()
     
     bpy.ops.object.mode_set(mode=old_mode)
 
@@ -164,6 +180,7 @@ class GM_PT_SelectMaterialOption(bpy.types.Panel):
         layout.prop(scene, "ghost_display"   , text=bpy.app.translations.pgettext("Ghosting Display"))
         layout.prop(scene, "ghost_edge_color", text=bpy.app.translations.pgettext("Edge color"))
         layout.prop(scene, "ghost_face_color", text=bpy.app.translations.pgettext("Face color"))
+        #layout.prop(scene, "ghost_line_size" , text=bpy.app.translations.pgettext("Line size"))
         
         gm_draw.CustomDrawOperator.init_draw()
 
@@ -183,6 +200,10 @@ def init_props():
         subtype='COLOR', default=[0.0, 0.8, 0.0, 0.1], size=4, min=0.0, max=1.0)
     bpy.types.Material.ghost = bpy.props.BoolProperty(
         name=bpy.app.translations.pgettext("Ghosting Display"), default=True)
+    bpy.types.Scene.ghost_line_size = FloatProperty(
+        name=bpy.app.translations.pgettext("Line size"),
+        description=bpy.app.translations.pgettext("Line size"),
+        default=2.0, min=1.0, max=5.0)
 
 
 def clear_props():

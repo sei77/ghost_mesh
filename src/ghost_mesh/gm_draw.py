@@ -80,7 +80,7 @@ class CustomDrawOperator(bpy.types.Operator):
                 batch.draw(shader)
                 gpu.state.face_culling_set('NONE')
                 
-                gpu.state.line_width_set(2.0)
+                gpu.state.line_width_set(bpy.context.scene.ghost_line_size)
                 batch = batch_for_shader(shader, 'LINES', {"pos": edge_vert})
                 shader.uniform_float("color", bpy.context.scene.ghost_edge_color)
                 batch.draw(shader)
