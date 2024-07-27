@@ -2,8 +2,8 @@
 bl_info = {
     "name"    : "Ghost Mesh",
     "author"  : "sei77",
-    "version" : (1, 0, 0),
-    "blender" : (4, 0, 1),
+    "version" : (1, 0, 2),
+    "blender" : (4, 0, 0),
     "category": "3D View"
 }
 
