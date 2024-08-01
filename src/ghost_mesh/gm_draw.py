@@ -7,20 +7,20 @@ from mathutils import Matrix
 from bpy.props import FloatVectorProperty
 
 # 非表示設定された辺と面を描画する
-class CustomDrawOperator(bpy.types.Operator):
-    bl_idname = "view3d.draw_ghost_mesh"
+class GM_OT_CustomDraw(bpy.types.Operator):
+    bl_idname = "gm.custom_draw"
     bl_label  = "Draw Ghost Mesh"
     
     _handle  = None
     
     def invoke(self, context, event):
-        CustomDrawOperator.init_draw()
+        GM_OT_CustomDraw.init_draw()
         return {'RUNNING_MODAL'}
     
     def init_draw():
-        if CustomDrawOperator._handle is None:
-            CustomDrawOperator._handle = bpy.types.SpaceView3D.draw_handler_add(
-                CustomDrawOperator.draw_callback, (), 'WINDOW', 'POST_VIEW')
+        if GM_OT_CustomDraw._handle is None:
+            GM_OT_CustomDraw._handle = bpy.types.SpaceView3D.draw_handler_add(
+                GM_OT_CustomDraw.draw_callback, (), 'WINDOW', 'POST_VIEW')
         return
     
     def draw_callback():
@@ -44,6 +44,11 @@ class CustomDrawOperator(bpy.types.Operator):
             else:
                 bm = bmesh.from_edit_mesh(obj.data)
             
+            # 非表示フラグをクリア
+            for i, mat_slot in enumerate(obj.material_slots):
+                if hasattr(mat_slot.material, 'ghost_hide'):
+                    mat_slot.material.ghost_hide = False
+            
             # 隠れた面/辺を描画する
             faces = [face for face in bm.faces if face.hide]
             
@@ -56,9 +61,17 @@ class CustomDrawOperator(bpy.types.Operator):
                 
                 edge_exists = {}
                 for face in faces:
-                    if len(obj.material_slots) > 0 and hasattr(obj.material_slots[face.material_index].material, 'ghost'):
-                        if obj.material_slots[face.material_index].material.ghost == False:
-                            continue
+                    if len(obj.material_slots) > 0:
+                        # 非表示フラグを設定
+                        if hasattr(obj.material_slots[face.material_index].material, 'ghost_hide'):
+                            if obj.material_slots[face.material_index].material.ghost_hide == False:
+                                obj.material_slots[face.material_index].material.ghost_hide = True
+                        # ゴーストを表示しない場合は継続
+                        if hasattr(obj.material_slots[face.material_index].material, 'ghost'):
+                            if obj.material_slots[face.material_index].material.ghost == False:
+                                continue
+                    
+                    # 描画対象の面、辺を設定
                     start_index = len(face_vert)
                     for loop in face.loops:
                         face_vert.append(model_matrix @ loop.vert.co)
@@ -70,6 +83,7 @@ class CustomDrawOperator(bpy.types.Operator):
                             edge_vert.append(model_matrix @ edge.verts[0].co)
                             edge_vert.append(model_matrix @ edge.verts[1].co)
                 
+                gpu.state.clip_distances_set(1)
                 gpu.state.depth_test_set('LESS')
                 gpu.state.blend_set('ALPHA')
                 gpu.state.face_culling_set('BACK')
@@ -89,16 +103,20 @@ class CustomDrawOperator(bpy.types.Operator):
                 
                 gpu.state.blend_set('NONE')
                 gpu.state.depth_test_set('NONE')
+                gpu.state.clip_distances_set(0)
 
+# 登録処理
 def register():
-    bpy.utils.register_class(CustomDrawOperator)
+    bpy.utils.register_class(GM_OT_CustomDraw)
     bpy.app.handlers.load_post.append(load_handler)
 
+# 登録解除処理
 def unregister():
     bpy.app.handlers.load_post.remove(load_handler)
-    bpy.utils.unregister_class(CustomDrawOperator)
+    bpy.utils.unregister_class(GM_OT_CustomDraw)
 
+# 永続ハンドラー
 @persistent
 def load_handler(dummy):
-    bpy.ops.view3d.draw_ghost_mesh('INVOKE_DEFAULT')
+    bpy.ops.gm.custom_draw('INVOKE_DEFAULT')
 
