@@ -6,7 +6,7 @@ id = "my_example_extension"
 version = "1.0.4"
 name = "Ghost Mesh"
 tagline = "This is another extension"
-maintainer = "Developer name <sei77g@gmail.com>"
+maintainer = "sei77 <sei77g@gmail.com>"
 # Supported types: "add-on", "theme"
 type = "add-on"
 
