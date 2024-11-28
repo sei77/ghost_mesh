@@ -8,6 +8,8 @@ Ghost Meshは編集モードで面を非表示にした際に、メッシュを�
 
 詳細は [INSTALL](docs/INSTALL.md) を確認してください。
 
+Blender4.2以降はエクステンションを入手でも導入できます。詳細は [INSTALL-Extension](docs/INSTALL-Extension.md) を確認してください。
+
 ## 使用例
 「表示マテリアルの選択」パネルで編集したいマテリアル単位で表示/非表示（半透明）を切り替えることができます。
 
