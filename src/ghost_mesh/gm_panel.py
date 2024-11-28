@@ -14,7 +14,6 @@ def show_all(act_obj):
     bpy.ops.object.mode_set(mode="OBJECT")
     
     mesh = act_obj.data
-    mesh.update()
     
     for vert in mesh.vertices:
         vert.hide = False
@@ -22,6 +21,8 @@ def show_all(act_obj):
         edge.hide = False
     for face in mesh.polygons:
         face.hide = False
+    
+    mesh.update()
     
     bpy.ops.object.mode_set(mode=old_mode)
 
@@ -143,9 +144,10 @@ class GM_PT_SelectMaterial(bpy.types.Panel):
         row.mat_index = -1
         
         row = layout.row()
-        row.template_list("GM_UL_Items", "", obj, "material_slots", obj, "active_material_index", rows=3)
+        row.template_list("GM_UL_Items", "", obj, "material_slots", obj, "active_material_index", rows=8)
         
-        layout.prop(scn, "ghost_display"   , text=bpy.app.translations.pgettext("Ghosting Display"))
+        layout.prop(scn, "ghost_display1"  , text=bpy.app.translations.pgettext("Ghosting Display1"))
+        layout.prop(scn, "ghost_display2"  , text=bpy.app.translations.pgettext("Ghosting Display2"))
         layout.prop(scn, "ghost_edge_color", text=bpy.app.translations.pgettext("Edge color"))
         layout.prop(scn, "ghost_face_color", text=bpy.app.translations.pgettext("Face color"))
         
@@ -178,9 +180,13 @@ class GM_UL_Items(UIList):
 
 # プロパティの初期化
 def init_props():
-    bpy.types.Scene.ghost_display = BoolProperty(
-        name=bpy.app.translations.pgettext("Ghosting Display"),
-        description=bpy.app.translations.pgettext("Display hidden edges and faces as translucent"),
+    bpy.types.Scene.ghost_display1 = BoolProperty(
+        name=bpy.app.translations.pgettext("Ghosting Display1"),
+        description=bpy.app.translations.pgettext("Display hidden edges as translucent"),
+        default=True)
+    bpy.types.Scene.ghost_display2 = BoolProperty(
+        name=bpy.app.translations.pgettext("Ghosting Display2"),
+        description=bpy.app.translations.pgettext("Display hidden faces as translucent"),
         default=True)
     bpy.types.Scene.ghost_edge_color = FloatVectorProperty(
         name=bpy.app.translations.pgettext("Edge color"),
