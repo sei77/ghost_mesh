@@ -51,7 +51,6 @@ def ghost_mesh(event, act_obj, mat_index, mat_hide):
                 face.hide = False
                 for v in face.vertices:
                     mesh.vertices[v].hide = False
-        act_obj.material_slots[mat_index].material.ghost_hide = False
     # 現状を維持して対象を非表示にする
     else:
         for face in mesh.polygons:
@@ -60,7 +59,6 @@ def ghost_mesh(event, act_obj, mat_index, mat_hide):
             elif face.hide == False:
                 for v in face.vertices:
                     mesh.vertices[v].hide = False
-        act_obj.material_slots[mat_index].material.ghost_hide = True
     
     # いずれかの頂点が非表示だった場合は辺を隠す
     for edge in mesh.edges:
@@ -92,6 +90,8 @@ class GM_OT_GhostMesh(bpy.types.Operator):
                 show_all(bpy.context.object)
             else:
                 ghost_mesh(event, bpy.context.object, self.mat_index, self.mat_hide)
+            gm_draw.GM_OT_CustomDraw._updateMesh[bpy.context.object.name] = True
+            
             context.area.tag_redraw()
             
             return {'FINISHED'}
@@ -114,6 +114,7 @@ class GM_OT_GhostMeshDisplay(bpy.types.Operator):
             if context.active_object and context.active_object.type == 'MESH':
                 mat = context.active_object.material_slots[self.mat_index].material
                 mat.ghost = False if mat.ghost else True
+                gm_draw.GM_OT_CustomDraw._updateMesh[context.active_object.name] = True
                 
                 context.area.tag_redraw()
             

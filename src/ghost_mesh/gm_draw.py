@@ -50,38 +50,32 @@ class GM_OT_CustomDraw(bpy.types.Operator):
             else:
                 bm = bmesh.from_edit_mesh(obj.data)
             
-            # 非表示フラグをクリア
-            for i, mat_slot in enumerate(obj.material_slots):
-                #if hasattr(mat_slot.material, 'ghost_hide'):
-                mat_slot.material.ghost_hide = False
-            
             if GM_OT_CustomDraw._updateMesh[obj.name] == True:
                 GM_OT_CustomDraw._updateMesh[obj.name] = False
+                GM_OT_CustomDraw._edge_vert = []
+                GM_OT_CustomDraw._face_vert = []
+                GM_OT_CustomDraw._face_indices = []
+                
+                # 非表示フラグをクリア
+                for i, mat_slot in enumerate(obj.material_slots):
+                    mat_slot.material.ghost_hide = False
                 
                 # 隠れた面/辺を描画する
                 faces = [face for face in bm.faces if face.hide]
                 
                 if faces:
-                    GM_OT_CustomDraw._edge_vert = []
-                    GM_OT_CustomDraw._face_vert = []
-                    GM_OT_CustomDraw._face_indices = []
-                    
                     model_matrix = obj.matrix_world
                     
                     edge_exists = set()
-                    mat_exists = set()
                     for face in faces:
                         if len(obj.material_slots) > 0:
-                            if face.material_index not in mat_exists:
-                                mat_exists.add(face.material_index)
-                                # 非表示フラグを設定
-                                if hasattr(obj.material_slots[face.material_index].material, 'ghost_hide'):
-                                    if obj.material_slots[face.material_index].material.ghost_hide == False:
-                                        obj.material_slots[face.material_index].material.ghost_hide = True
-                                # ゴーストを表示しない場合は継続
-                                if hasattr(obj.material_slots[face.material_index].material, 'ghost'):
-                                    if obj.material_slots[face.material_index].material.ghost == False:
-                                        continue
+                            # 非表示フラグを設定
+                            if hasattr(obj.material_slots[face.material_index].material, 'ghost_hide'):
+                                obj.material_slots[face.material_index].material.ghost_hide = True
+                            # ゴーストを表示しない場合は継続
+                            if hasattr(obj.material_slots[face.material_index].material, 'ghost'):
+                                if obj.material_slots[face.material_index].material.ghost == False:
+                                    continue
                         
                         # 描画対象の面を設定
                         if bpy.context.scene.ghost_display2 == True:
