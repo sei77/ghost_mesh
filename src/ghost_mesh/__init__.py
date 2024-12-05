@@ -2,7 +2,7 @@
 bl_info = {
     "name"    : "Ghost Mesh",
     "author"  : "sei77",
-    "version" : (1, 0, 5),
+    "version" : (1, 0, 6),
     "blender" : (4, 0, 0),
     "category": "3D View"
 }
@@ -26,7 +26,7 @@ def register():
 
 # 登録解除処理
 def unregister():
-    bpy.app.translations.unregister(__name__, gm_dict.translation_dict)
+    bpy.app.translations.unregister(__name__)
     gm_draw.unregister()
     gm_panel.unregister()
     

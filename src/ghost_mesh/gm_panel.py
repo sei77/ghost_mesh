@@ -89,7 +89,10 @@ class GM_OT_GhostMesh(bpy.types.Operator):
             if self.mat_index == -1:
                 show_all(bpy.context.object)
             else:
-                ghost_mesh(event, bpy.context.object, self.mat_index, self.mat_hide)
+                mat = context.active_object.material_slots[self.mat_index].material
+                mat_hide = 0 if mat.ghost_hide == True else 1
+                ghost_mesh(event, bpy.context.object, self.mat_index, mat_hide)
+            
             gm_draw.GM_OT_CustomDraw._updateMesh[bpy.context.object.name] = True
             
             context.area.tag_redraw()
@@ -210,7 +213,8 @@ def clear_props():
     del bpy.types.Material.ghost_hide
     del bpy.types.Scene.ghost_edge_color
     del bpy.types.Scene.ghost_face_color
-    del bpy.types.Scene.ghost_display
+    del bpy.types.Scene.ghost_display2
+    del bpy.types.Scene.ghost_display1
 
 # 登録処理
 def register():

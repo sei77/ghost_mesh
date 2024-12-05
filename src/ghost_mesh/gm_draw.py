@@ -9,7 +9,7 @@ from bpy.props import FloatVectorProperty
 # 非表示設定された辺と面を描画する
 class GM_OT_CustomDraw(bpy.types.Operator):
     bl_idname = "gm.custom_draw"
-    bl_label  = "Draw Ghost Mesh"
+    bl_label  = "Draw ghost mesh"
     
     _handle  = None
     _edge_vert = []
