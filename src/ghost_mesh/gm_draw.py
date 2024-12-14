@@ -36,19 +36,11 @@ class GM_OT_CustomDraw(bpy.types.Operator):
         obj = bpy.context.active_object
         if obj and obj.mode == 'EDIT' and obj.type == 'MESH':
             
-            # ミラーモディファイアーが適用されているか判定
-            has_mirror_modifier = any(mod.type == 'MIRROR' for mod in obj.modifiers)
-            if has_mirror_modifier == True:
-                # モディファイア適用後のメッシュを取得
-                depsgraph = bpy.context.evaluated_depsgraph_get()
-                eval_obj = obj.evaluated_get(depsgraph)
-                eval_mesh = eval_obj.to_mesh()
-                
-                # 評価されたメッシュから bmesh を作成
-                bm = bmesh.new()
-                bm.from_mesh(eval_mesh)
-            else:
-                bm = bmesh.from_edit_mesh(obj.data)
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            eval_obj = obj.evaluated_get(depsgraph)
+            eval_mesh = eval_obj.to_mesh()
+            bm = bmesh.new()
+            bm.from_mesh(eval_mesh)
             
             if GM_OT_CustomDraw._updateMesh[obj.name] == True:
                 GM_OT_CustomDraw._updateMesh[obj.name] = False
